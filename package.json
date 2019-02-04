@@ -1,0 +1,24 @@
+{
+  "name": "politctrl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "rnickson <m@mickson.me>",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^6.2.0",
+    "fastify": "^1.13.4",
+    "fs-extra": "^7.0.1",
+    "pg": "^7.8.0",
+    "rxjs": "^6.4.0",
+    "twit": "^2.2.11"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.0",
+    "@types/fs-extra": "^5.0.4",
+    "@types/pg": "^7.4.11",
+    "@types/twit": "^2.2.20",
+    "tslint": "^5.12.1",
+    "tslint-config-airbnb": "^5.11.1",
+    "typescript": "^3.3.1"
+  }
+}
