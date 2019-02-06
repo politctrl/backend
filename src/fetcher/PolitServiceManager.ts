@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import path from 'path';
 import { PolitContext } from './PolitContext';
 import { PolitPostListenerBase, PolitPostListenerState } from './PolitPostListenerBase';

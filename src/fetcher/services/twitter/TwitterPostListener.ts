@@ -1,12 +1,14 @@
 import Twit, { Stream } from 'twit';
 import { TwitterPost, TwitterDeleteInfo } from './TwitterModels';
-import { PolitPost, PolitEmbed, PolitEmbedType, PolitUser } from '../../../models';
-import { PolitPostListenerBase } from '../../PolitPostListenerBase';
+import { PolitEmbedType } from '../../../models';
+import { PolitPostListenerBase, PolitPostListenerState } from '../../PolitPostListenerBase';
 import { PolitContext } from '../../PolitContext';
+import { Post } from '../../entities/Post';
+import { User } from '../../entities/User';
 
 export default class TwitterListener extends PolitPostListenerBase {
   client: Twit;
-  fetchedUsers: string[]; // strings containing numbers - profile IDs
+  fetchedUsers: User[];
   stream?: Stream;
   serviceName: string = 'twitter';
 
@@ -30,44 +32,52 @@ export default class TwitterListener extends PolitPostListenerBase {
 
   async start() {
     console.log(this.fetchedUsers);
-    this.stream = this.client.stream('statuses/filter', { follow: this.fetchedUsers.join(',') });
-    this.stream.on('tweet', (tweet: TwitterPost) => {
-      console.log(JSON.stringify(tweet));
-      // some of tweets showed here are just mentioning the followed person
-      // and we shouldn't archive them because:
-      // A. they're not made by public persons
-      // B. it's just spammy and not interesing
-      if (this.fetchedUsers.includes(tweet.user.id_str)) {
-        const post = {
-          author: {
-            readable_name: tweet.user.name,
-            username: tweet.user.screen_name,
-            service: this.serviceName,
-            external_id: tweet.user.id_str,
-            avatar: tweet.user.profile_image_url_https,
-          },
-          content: tweet.text,
-          embeds: tweet.entities.media ? tweet.entities.media.map(e => ({
-            type: PolitEmbedType.IMAGE,
-            url: e.media_url_https,
-          })) : [],
-          id: tweet.id_str,
-          createTimestamp: parseInt(tweet.timestamp_ms, 10),
-        } as PolitPost;
-        this.context.listenerApi.savePost(post);
-      }
-    });
-    this.stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
-      console.log(deleteInfo);
-      this.context.listenerApi.savePostDeleteInfo(
-        deleteInfo.delete.status.id_str, parseInt(deleteInfo.delete.timestamp_ms, 10));
-    });
+    if (this.fetchedUsers.length) {
+      this.state = PolitPostListenerState.STARTING;
+      this.stream = this.client.stream(
+        'statuses/filter', { follow: this.fetchedUsers.map(u => u.externalId).join(',') });
+      this.stream.on('tweet', (tweet: TwitterPost) => {
+        console.log(JSON.stringify(tweet));
+        /*
+          some of tweets showed here are just mentioning the followed person
+          and we shouldn't archive them because:
+          A. they're not made by public persons
+          B. it's just spammy and not interesing
+        */
+        const user = this.fetchedUsers.find(u => u.externalId === tweet.user.id_str);
+        if (user) {
+          if (this.context.listenerApi) {
+            const post = new Post();
+            post.author = user.id;
+            post.content = tweet.text;
+            post.createTimestamp = parseInt(tweet.timestamp_ms, 10);
+            post.deleted = false;
+            post.embeds = tweet.entities.media ? tweet.entities.media.map(e => ({
+              type: PolitEmbedType.IMAGE,
+              url: e.media_url_https,
+            })) : [];
+            post.externalId = tweet.id_str;
+
+            this.context.listenerApi.savePost(post);
+          }
+        }
+      });
+      this.stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
+        console.log(deleteInfo);
+        this.context.listenerApi.savePostDeleteInfo(
+          deleteInfo.delete.status.id_str, parseInt(deleteInfo.delete.timestamp_ms, 10));
+      });
+      this.state = PolitPostListenerState.RUNNING;
+    } else {
+      this.state = PolitPostListenerState.BROKEN;
+    }
   }
 
   async stop() {
     if (this.stream) {
       this.stream.stop();
     }
+    this.state = PolitPostListenerState.STOPPED;
   }
 
 }

@@ -1,6 +1,6 @@
 import { PolitContext } from './PolitContext';
-import { Observable } from 'rxjs';
-import { PolitPost } from '../models';
+import { User } from './entities/User';
+import { Post } from './entities/Post';
 
 export class PolitPostListenerApi {
   context: PolitContext;
@@ -9,35 +9,36 @@ export class PolitPostListenerApi {
     this.context = context;
   }
 
-  async getFetchedUsers(service: string): Promise<string[]> {
-    return this.context.database.query(
-      'SELECT external_id FROM users WHERE service = $1 AND active = true',
-      [service],
-    ).then(result => result.rows.map(e => e.external_id));
+  async getFetchedUsers(service: string): Promise<User[]> {
+    return this.context.connection
+      .getRepository(User)
+      .createQueryBuilder()
+      .select()
+      .where('service = :service AND active = true', { service })
+      .getMany();
   }
 
-  async savePost(post: PolitPost) {
-    this.context.database.query(
-      `INSERT INTO posts (service, external_id, author, content,
-        create_timestamp, embeds, deleted)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        post.author.service,
-        post.id,
-        post.author.external_id,
-        post.content,
-        post.createTimestamp,
-        post.embeds,
-        false,
-      ],
-    );
+  async savePost(post: Post) {
+    this.context.connection
+      .getRepository(Post)
+      .createQueryBuilder()
+      .insert()
+      .into('post')
+      .values(post)
+      // .printSql()
+      .execute();
   }
 
   async savePostDeleteInfo(externalId: string, deleteTimestamp: number) {
-    this.context.database.query(
-      `UPDATE posts SET deleted = true, delete_timestamp = $1
-        WHERE external_id = $2`,
-      [deleteTimestamp, externalId],
-    );
+    this.context.connection
+      .getRepository(Post)
+      .createQueryBuilder()
+      .update()
+      .where('externalId = :externalId', { externalId })
+      .set({
+        deleteTimestamp,
+        deleted: true,
+      })
+      .execute();
   }
 }

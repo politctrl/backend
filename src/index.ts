@@ -3,6 +3,8 @@ dotenv.config();
 
 import { PolitContext } from './fetcher/PolitContext';
 const context = new PolitContext();
-context.startPolit();
+context.initialize()
+  .then(() => context.startPolit())
+  .then(() => console.log('Running'));
 
 // import './api';
