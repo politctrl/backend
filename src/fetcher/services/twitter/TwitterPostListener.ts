@@ -57,6 +57,7 @@ export default class TwitterListener extends PolitPostListenerBase {
               url: e.media_url_https,
             })) : [];
             post.externalId = tweet.id_str;
+            post.service = this.serviceName;
 
             this.context.listenerApi.savePost(post);
           }

@@ -8,6 +8,9 @@ export class Post {
   id: number;
 
   @Column()
+  service: string;
+
+  @Column()
   externalId: string;
 
   @Column('text')
