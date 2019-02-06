@@ -1,6 +1,6 @@
 import path from 'path';
 import { PolitContext } from './PolitContext';
-import { PolitPostListenerBase, PolitPostListenerState } from './PolitPostListenerBase';
+import { PolitPostListenerBase, PolitPostListenerState } from './fetcher/PolitPostListenerBase';
 
 export default class PolitServiceManager {
   context: PolitContext;
@@ -13,7 +13,7 @@ export default class PolitServiceManager {
   }
 
   async startService(service: string) {
-    const { PostListener } = require(path.join(__dirname, 'services', service, 'index'));
+    const { PostListener } = require(path.join(__dirname, 'fetcher', 'services', service, 'index'));
     this.services[service] = new PostListener(this.context) as PolitPostListenerBase;
     await this.services[service].updateFetchedUsers();
     await this.services[service].start();

@@ -2,9 +2,9 @@ import Twit, { Stream } from 'twit';
 import { TwitterPost, TwitterDeleteInfo } from './TwitterModels';
 import { PolitEmbedType } from '../../../models';
 import { PolitPostListenerBase, PolitPostListenerState } from '../../PolitPostListenerBase';
-import { PolitContext } from '../../PolitContext';
-import { Post } from '../../entities/Post';
-import { User } from '../../entities/User';
+import { PolitContext } from '../../../PolitContext';
+import { Post } from '../../../entities/Post';
+import { User } from '../../../entities/User';
 
 export default class TwitterListener extends PolitPostListenerBase {
   client: Twit;

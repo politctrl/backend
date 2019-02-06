@@ -1,5 +1,5 @@
-import { PolitContext } from './PolitContext';
-import { User } from './entities/User';
+import { PolitContext } from '../PolitContext';
+import { User } from '../entities/User';
 
 export enum PolitPostListenerState {
   READY,

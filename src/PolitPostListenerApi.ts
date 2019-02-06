@@ -25,7 +25,6 @@ export class PolitPostListenerApi {
       .insert()
       .into('post')
       .values(post)
-      // .printSql()
       .execute();
   }
 
