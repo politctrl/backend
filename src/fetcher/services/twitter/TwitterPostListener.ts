@@ -5,6 +5,7 @@ import { PolitPostListenerBase, PolitPostListenerState } from '../../PolitPostLi
 import { PolitContext } from '../../../PolitContext';
 import { Post } from '../../../entities/Post';
 import { User } from '../../../entities/User';
+import { Embed } from '../../../entities/Embed';
 
 export default class TwitterListener extends PolitPostListenerBase {
   client: Twit;
@@ -48,16 +49,51 @@ export default class TwitterListener extends PolitPostListenerBase {
         if (user) {
           if (this.context.listenerApi) {
             const post = new Post();
-            post.author = user.id;
-            post.content = tweet.text;
+            post.author = user;
             post.createTimestamp = parseInt(tweet.timestamp_ms, 10);
             post.deleted = false;
-            post.embeds = tweet.entities.media ? tweet.entities.media.map(e => ({
-              type: PolitEmbedType.IMAGE,
-              url: e.media_url_https,
-            })) : [];
             post.externalId = tweet.id_str;
             post.service = this.serviceName;
+            post.replyToId = tweet.in_reply_to_status_id_str;
+
+            post.embeds = [];
+            if (tweet.entities.media) {
+              tweet.entities.media.forEach((e) => {
+                const embed = new Embed();
+                embed.type = PolitEmbedType.IMAGE;
+                if (e.type === 'animated_gif') {
+                  embed.type = PolitEmbedType.GIF;
+                } else if (e.type === 'video') {
+                  embed.type = PolitEmbedType.VIDEO;
+                }
+                embed.url = e.media_url_https;
+              });
+            }
+
+            post.content = '';
+            if (tweet.extended_tweet) {
+              post.content = tweet.extended_tweet.full_text;
+            } else if (tweet.retweeted_status) {
+              post.content += `RT @${tweet.retweeted_status.user.screen_name}: `;
+              if (tweet.retweeted_status.extended_tweet) {
+                post.content += tweet.retweeted_status.extended_tweet.full_text;
+              } else {
+                post.content += tweet.retweeted_status.text;
+              }
+            } else {
+              post.content = tweet.text;
+            }
+            if (tweet.quoted_status) {
+              if (tweet.retweeted_status) {
+                post.content += '\n';
+              }
+              post.content += `Quoting @${tweet.quoted_status.user.screen_name}: `;
+              if (tweet.quoted_status.extended_tweet) {
+                post.content += tweet.quoted_status.extended_tweet.full_text;
+              } else {
+                post.content += tweet.quoted_status.text;
+              }
+            }
 
             this.context.listenerApi.savePost(post);
           }

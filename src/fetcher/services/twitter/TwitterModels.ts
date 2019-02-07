@@ -6,11 +6,11 @@ export interface TwitterPost {
   display_text_range: number[];
   source: string;
   truncated: boolean;
-  in_reply_to_status_id: number;
-  in_reply_to_status_id_str: string;
-  in_reply_to_user_id: number;
-  in_reply_to_user_id_str: string;
-  in_reply_to_screen_name: string;
+  in_reply_to_status_id?: number;
+  in_reply_to_status_id_str?: string;
+  in_reply_to_user_id?: number;
+  in_reply_to_user_id_str?: string;
+  in_reply_to_screen_name?: string;
   user: TwitterUser;
   geo?: any;
   coordinates?: any;
@@ -27,6 +27,16 @@ export interface TwitterPost {
   filter_level: string;
   lang: string;
   timestamp_ms: string;
+  extended_tweet?: TwitterExtendedTweet | null;
+  retweeted_status?: TwitterPost | null;
+  quoted_status?: TwitterPost | null;
+}
+
+export interface TwitterExtendedTweet {
+  full_text: string;
+  display_text_range: number[];
+  entities: TwitterEntities;
+  extended_entities: TwitterEntities;
 }
 
 export interface TwitterUser {

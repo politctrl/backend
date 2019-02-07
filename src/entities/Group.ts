@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable } from 'typeorm';
+import { User } from './User';
 
 @Entity()
 export class Group {
@@ -9,6 +10,15 @@ export class Group {
   @Column()
   displayName: string;
 
-  @Column('json')
-  masterGroups: number[];
+  /*
+  @ManyToMany(type => Group, group => group.children)
+  @JoinTable()
+  parents: Group[];
+
+  @ManyToMany(type => Group, group => group.parents)
+  children: Group[];
+  */
+
+  @ManyToMany(type => User, user => user.groups)
+  users: User[];
 }

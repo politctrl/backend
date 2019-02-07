@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import { Post } from './Post';
+import { Group } from './Group';
 
 @Entity()
 export class User {
@@ -18,6 +20,10 @@ export class User {
   @Column()
   service: string;
 
-  @Column('json')
-  groups: number[];
+  @ManyToMany(type => Group, group => group.users)
+  @JoinTable()
+  groups: Group[];
+
+  @OneToMany(type => Post, post => post.author)
+  posts: Post[];
 }

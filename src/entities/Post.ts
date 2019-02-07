@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Embed } from './Embed';
+import { User } from './User';
 
 @Entity()
 export class Post {
@@ -16,8 +17,8 @@ export class Post {
   @Column('text')
   content: string;
 
-  @Column()
-  author: number;
+  @ManyToOne(type => User, user => user.posts)
+  author: User;
 
   @Column('bigint')
   createTimestamp: number;
@@ -30,4 +31,7 @@ export class Post {
 
   @Column('json')
   embeds: Embed[];
+
+  @Column({ nullable: true })
+  replyToId?: string;
 }

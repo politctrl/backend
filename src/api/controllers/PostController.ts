@@ -13,21 +13,41 @@ export class PostController {
 
   @Get('/posts/deleted')
   getAll() {
-    return this.postRepository.find({ deleted: true });
+    return this.postRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.author', 'user')
+      .where('post.deleted = true')
+      .orderBy('post.deleteTimestamp', 'DESC')
+      .getMany();
   }
 
   @Get('/post/id/:id')
-  getOne(@EntityFromParam('id') post: Post) {
-    return post;
+  getOne(@Param('id') id: number) {
+    return this.postRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.author', 'user')
+      .where('post.id = :id')
+      .setParameters({ id })
+      .getOne();
   }
 
   @Get('/post/service/:service/:externalId')
   getOneByExternalId(@Param('service') service: string, @Param('externalId') externalId: string) {
-    return this.postRepository.findOne({ service, externalId });
+    return this.postRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.author', 'user')
+      .where('post.service = :service AND post.externalId = :externalId')
+      .setParameters({ service, externalId })
+      .getOne();
   }
 
   @Get('/posts/user/:id')
   getAllFromUser(@Param('id') id: number) {
-    return this.postRepository.find({ author: id, deleted: true });
+    return this.postRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.author', 'user')
+      .where('post.author.id = :id AND post.deleted = true')
+      .setParameters({ id })
+      .getMany();
   }
 }

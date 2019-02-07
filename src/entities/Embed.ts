@@ -1,7 +1,10 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Embed {
+
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name?: string;
