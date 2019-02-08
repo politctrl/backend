@@ -1,3 +1,4 @@
+import log from 'consola';
 import Twit, { Stream } from 'twit';
 import { TwitterPost, TwitterDeleteInfo } from './TwitterModels';
 import { PolitEmbedType } from '../../../models';
@@ -32,13 +33,13 @@ export default class TwitterListener extends PolitPostListenerBase {
   }
 
   async start() {
-    console.log(this.fetchedUsers);
+    log.debug(this.fetchedUsers);
     if (this.fetchedUsers.length) {
       this.state = PolitPostListenerState.STARTING;
       this.stream = this.client.stream(
         'statuses/filter', { follow: this.fetchedUsers.map(u => u.externalId).join(',') });
       this.stream.on('tweet', (tweet: TwitterPost) => {
-        console.log(JSON.stringify(tweet));
+        log.debug(JSON.stringify(tweet));
         /*
           some of tweets showed here are just mentioning the followed person
           and we shouldn't archive them because:
@@ -100,7 +101,7 @@ export default class TwitterListener extends PolitPostListenerBase {
         }
       });
       this.stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
-        console.log(deleteInfo);
+        log.debug(deleteInfo);
         this.context.listenerApi.savePostDeleteInfo(
           deleteInfo.delete.status.id_str, parseInt(deleteInfo.delete.timestamp_ms, 10));
       });

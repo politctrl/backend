@@ -5,6 +5,7 @@
   "author": "rnickson <m@mickson.me>",
   "license": "MIT",
   "dependencies": {
+    "consola": "^2.4.0",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
     "pg": "^7.8.0",

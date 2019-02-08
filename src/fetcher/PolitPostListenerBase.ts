@@ -2,13 +2,13 @@ import { PolitContext } from '../PolitContext';
 import { User } from '../entities/User';
 
 export enum PolitPostListenerState {
-  READY,
-  STARTING,
-  RUNNING,
-  RESTARTING,
-  STOPPING,
-  STOPPED,
-  BROKEN,
+  READY = 'ready',
+  STARTING = 'starting',
+  RUNNING = 'running',
+  RESTARTING = 'restarting',
+  STOPPING = 'stopping',
+  STOPPED = 'stopped',
+  BROKEN = 'broken',
 }
 
 export interface PolitPostListenerBaseInterface {

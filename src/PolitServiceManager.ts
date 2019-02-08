@@ -1,4 +1,5 @@
 import path from 'path';
+import log from 'consola';
 import { PolitContext } from './PolitContext';
 import { PolitPostListenerBase, PolitPostListenerState } from './fetcher/PolitPostListenerBase';
 
@@ -17,6 +18,11 @@ export default class PolitServiceManager {
     this.services[service] = new PostListener(this.context) as PolitPostListenerBase;
     await this.services[service].updateFetchedUsers();
     await this.services[service].start();
+    if (this.services[service].state === PolitPostListenerState.RUNNING) {
+      log.success(`Service ${service} running successfully`);
+    } else {
+      log.error(`Service ${service} didn't start (current state: ${this.services[service].state})`);
+    }
   }
 
   async startServices() {
