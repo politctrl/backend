@@ -4,6 +4,11 @@
   "main": "index.js",
   "author": "rnickson <m@mickson.me>",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "CONSOLA_LEVEL=silent ts-node src/index.ts"
+  },
   "dependencies": {
     "consola": "^2.4.0",
     "dotenv": "^6.2.0",
