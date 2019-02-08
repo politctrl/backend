@@ -38,10 +38,13 @@ export default class PolitServiceManager {
     if (this.services[service]
       && this.services[service].state === PolitPostListenerState.RUNNING) {
       this.services[service].stop();
+      log.info(`Service ${service} stopped successfully`);
     }
   }
 
   async stopServices() {
-    Object.values(this.services).forEach(ser => ser.stop());
+    log.info('Stopping all services');
+    Object.values(this.services).forEach(ser => ser.stop()
+      && log.info(`Service ${ser.serviceName} stopped successfully`));
   }
 }

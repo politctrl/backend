@@ -8,12 +8,15 @@ import { Post } from './entities/Post';
 import { User } from './entities/User';
 import { Group } from './entities/Group';
 import { GroupController } from './api/controllers/GroupController';
+import { Application } from 'express';
+import http from 'http';
 
 export class PolitContext {
   connection: Connection;
   serviceManager: PolitServiceManager;
   listenerApi: PolitPostListenerApi;
-  apiServer: any;
+  apiApplication: Application;
+  apiServer: http.Server;
 
   async initialize() {
     this.connection = await createConnection({
@@ -32,18 +35,25 @@ export class PolitContext {
     });
     this.serviceManager = new PolitServiceManager(this);
     this.listenerApi = new PolitPostListenerApi(this);
-    this.apiServer = createExpressServer({
+    this.apiApplication = createExpressServer({
       controllers: [
         UserController,
         PostController,
         GroupController,
       ],
       routePrefix: '/v1',
-    });
+    }) as Application;
+    this.apiServer = http.createServer(this.apiApplication);
   }
 
   async startPolit() {
     await this.serviceManager.startServices();
     await this.apiServer.listen(parseInt(process.env.HTTP_PORT || '1447', 10));
+  }
+
+  async stopPolit() {
+    await this.apiServer.close();
+    await this.serviceManager.stopServices();
+    await this.connection.close();
   }
 }
