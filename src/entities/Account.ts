@@ -1,9 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
+  ManyToOne,
+} from 'typeorm';
 import { Post } from './Post';
 import { Group } from './Group';
+import { AccountOwner } from './AccountOwner';
 
 @Entity()
-export class User {
+export class Account {
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,10 +29,13 @@ export class User {
   @Column()
   service: string;
 
-  @ManyToMany(type => Group, group => group.users)
+  @ManyToMany(type => Group, group => group.accounts)
   @JoinTable()
   groups: Group[];
 
   @OneToMany(type => Post, post => post.author)
   posts: Post[];
+
+  @ManyToOne(type => AccountOwner, owner => owner.accounts)
+  owner: AccountOwner;
 }

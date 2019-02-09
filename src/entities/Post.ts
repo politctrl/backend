@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Embed } from './Embed';
-import { User } from './User';
+import { Account } from './Account';
 
 @Entity()
 export class Post {
@@ -17,8 +17,8 @@ export class Post {
   @Column('text')
   content: string;
 
-  @ManyToOne(type => User, user => user.posts)
-  author: User;
+  @ManyToOne(type => Account, account => account.posts)
+  author: Account;
 
   @Column('bigint')
   createTimestamp: number;

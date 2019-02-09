@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable } from 'typeorm';
-import { User } from './User';
+import { Account } from './Account';
 
 @Entity()
 export class Group {
@@ -19,6 +19,6 @@ export class Group {
   children: Group[];
   */
 
-  @ManyToMany(type => User, user => user.groups)
-  users: User[];
+  @ManyToMany(type => Account, account => account.groups)
+  accounts: Account[];
 }

@@ -3,11 +3,11 @@ import { createConnection, Connection } from 'typeorm';
 import { createExpressServer } from 'routing-controllers';
 import PolitServiceManager from './PolitServiceManager';
 import { PolitPostListenerApi } from './PolitPostListenerApi';
-import { UserController, PostController } from './api';
+import { AccountController, PostController, GroupController } from './api';
 import { Post } from './entities/Post';
-import { User } from './entities/User';
+import { Account } from './entities/Account';
+import { AccountOwner } from './entities/AccountOwner';
 import { Group } from './entities/Group';
-import { GroupController } from './api/controllers/GroupController';
 import { Application } from 'express';
 import http from 'http';
 
@@ -28,7 +28,8 @@ export class PolitContext {
       password: process.env.PGPASSWORD,
       entities: [
         Post,
-        User,
+        Account,
+        AccountOwner,
         Group,
       ],
       synchronize: true,
@@ -37,7 +38,7 @@ export class PolitContext {
     this.listenerApi = new PolitPostListenerApi(this);
     this.apiApplication = createExpressServer({
       controllers: [
-        UserController,
+        AccountController,
         PostController,
         GroupController,
       ],

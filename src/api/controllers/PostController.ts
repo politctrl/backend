@@ -15,7 +15,8 @@ export class PostController {
   getAll() {
     return this.postRepository
       .createQueryBuilder('post')
-      .innerJoinAndSelect('post.author', 'user')
+      .innerJoinAndSelect('post.author', 'account')
+      .innerJoinAndSelect('account.owner', 'account_owner')
       .where('post.deleted = true')
       .orderBy('post.deleteTimestamp', 'DESC')
       .getMany();
@@ -25,9 +26,9 @@ export class PostController {
   getOne(@Param('id') id: number) {
     return this.postRepository
       .createQueryBuilder('post')
-      .innerJoinAndSelect('post.author', 'user')
-      .where('post.id = :id')
-      .setParameters({ id })
+      .innerJoinAndSelect('post.author', 'account')
+      .innerJoinAndSelect('account.owner', 'account_owner')
+      .where('post.id = :id', { id })
       .getOne();
   }
 
@@ -35,7 +36,8 @@ export class PostController {
   getOneByExternalId(@Param('service') service: string, @Param('externalId') externalId: string) {
     return this.postRepository
       .createQueryBuilder('post')
-      .innerJoinAndSelect('post.author', 'user')
+      .innerJoinAndSelect('post.author', 'account')
+      .innerJoinAndSelect('account', 'account_owner')
       .where('post.service = :service AND post.externalId = :externalId')
       .setParameters({ service, externalId })
       .getOne();
@@ -45,7 +47,8 @@ export class PostController {
   getAllFromUser(@Param('id') id: number) {
     return this.postRepository
       .createQueryBuilder('post')
-      .innerJoinAndSelect('post.author', 'user')
+      .innerJoinAndSelect('post.author', 'account')
+      .innerJoinAndSelect('account.owner', 'account_owner')
       .where('post.author.id = :id AND post.deleted = true')
       .setParameters({ id })
       .getMany();

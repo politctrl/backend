@@ -1,5 +1,5 @@
 import { PolitContext } from './PolitContext';
-import { User } from './entities/User';
+import { Account } from './entities/Account';
 import { Post } from './entities/Post';
 
 export class PolitPostListenerApi {
@@ -9,9 +9,9 @@ export class PolitPostListenerApi {
     this.context = context;
   }
 
-  async getFetchedUsers(service: string): Promise<User[]> {
+  async getFetchedAccounts(service: string): Promise<Account[]> {
     return this.context.connection
-      .getRepository(User)
+      .getRepository(Account)
       .createQueryBuilder()
       .select()
       .where('service = :service AND active = true', { service })

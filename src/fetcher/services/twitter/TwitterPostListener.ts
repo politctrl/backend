@@ -5,12 +5,12 @@ import { PolitEmbedType } from '../../../models';
 import { PolitPostListenerBase, PolitPostListenerState } from '../../PolitPostListenerBase';
 import { PolitContext } from '../../../PolitContext';
 import { Post } from '../../../entities/Post';
-import { User } from '../../../entities/User';
+import { Account } from '../../../entities/Account';
 import { Embed } from '../../../entities/Embed';
 
 export default class TwitterListener extends PolitPostListenerBase {
   client: Twit;
-  fetchedUsers: User[];
+  fetchedAccounts: Account[];
   stream?: Stream;
   serviceName: string = 'twitter';
 
@@ -29,15 +29,15 @@ export default class TwitterListener extends PolitPostListenerBase {
       access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
       strictSSL: true,
     });
-    this.fetchedUsers = [];
+    this.fetchedAccounts = [];
   }
 
   async start() {
-    log.debug(this.fetchedUsers);
-    if (this.fetchedUsers.length) {
+    log.debug(this.fetchedAccounts);
+    if (this.fetchedAccounts.length) {
       this.state = PolitPostListenerState.STARTING;
       this.stream = this.client.stream(
-        'statuses/filter', { follow: this.fetchedUsers.map(u => u.externalId).join(',') });
+        'statuses/filter', { follow: this.fetchedAccounts.map(a => a.externalId).join(',') });
       this.stream.on('tweet', (tweet: TwitterPost) => {
         log.debug(JSON.stringify(tweet));
         /*
@@ -46,7 +46,7 @@ export default class TwitterListener extends PolitPostListenerBase {
           A. they're not made by public persons
           B. it's just spammy and not interesing
         */
-        const user = this.fetchedUsers.find(u => u.externalId === tweet.user.id_str);
+        const user = this.fetchedAccounts.find(u => u.externalId === tweet.user.id_str);
         if (user) {
           if (this.context.listenerApi) {
             const post = new Post();

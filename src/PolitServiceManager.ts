@@ -16,7 +16,7 @@ export default class PolitServiceManager {
   async startService(service: string) {
     const { PostListener } = require(path.join(__dirname, 'fetcher', 'services', service, 'index'));
     this.services[service] = new PostListener(this.context) as PolitPostListenerBase;
-    await this.services[service].updateFetchedUsers();
+    await this.services[service].updateFetchedAccounts();
     await this.services[service].start();
     if (this.services[service].state === PolitPostListenerState.RUNNING) {
       log.success(`Service ${service} running successfully`);
