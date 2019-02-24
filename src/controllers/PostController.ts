@@ -1,7 +1,7 @@
 import { JsonController, Get, Param } from 'routing-controllers';
 import { getConnectionManager, Repository } from 'typeorm';
 import { EntityFromParam } from 'typeorm-routing-controllers-extensions';
-import { Post } from '../../entities/Post';
+import { Post } from '../entities/Post';
 
 @JsonController()
 export class PostController {
@@ -43,7 +43,7 @@ export class PostController {
       .getOne();
   }
 
-  @Get('/posts/user/:id')
+  @Get('/posts/account/:id')
   getAllFromUser(@Param('id') id: number) {
     return this.postRepository
       .createQueryBuilder('post')
@@ -52,5 +52,26 @@ export class PostController {
       .where('post.author.id = :id AND post.deleted = true')
       .setParameters({ id })
       .getMany();
+  }
+
+  // no route specified -> unavailable from web
+  save(post: Post | Post[]) {
+    return this.postRepository
+      .createQueryBuilder()
+      .insert()
+      .into('post')
+      .values(post)
+      .execute();
+  }
+
+  // no route specified -> unavailable from web
+  updateDeleteInfo(service: string, externalId: string, deleteTimestamp: number) {
+    return this.postRepository
+      .createQueryBuilder('post')
+      .update()
+      .set({ deleteTimestamp })
+      .where('post.service = :service AND post.externalId = :externalId')
+      .setParameters({ service, externalId })
+      .execute();
   }
 }

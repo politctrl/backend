@@ -1,6 +1,6 @@
 import { JsonController, Get } from 'routing-controllers';
 import { getConnectionManager, Repository } from 'typeorm';
-import { Group } from '../../entities/Group';
+import { Group } from '../entities/Group';
 import { EntityFromParam } from 'typeorm-routing-controllers-extensions';
 
 @JsonController()
