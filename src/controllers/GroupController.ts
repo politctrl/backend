@@ -1,7 +1,9 @@
-import { JsonController, Get } from 'routing-controllers';
+import { JsonController, Get, QueryParam } from 'routing-controllers';
 import { getConnectionManager, Repository } from 'typeorm';
 import { Group } from '../entities/Group';
 import { EntityFromParam } from 'typeorm-routing-controllers-extensions';
+
+const GROUPS_PER_PAGE = 15;
 
 @JsonController()
 export class GroupController {
@@ -13,8 +15,13 @@ export class GroupController {
   }
 
   @Get('/groups/all')
-  getAll() {
-    return this.groupRepository.find();
+  getAll(@QueryParam('page') page: number = 0) {
+    return this.groupRepository
+      .createQueryBuilder()
+      .select()
+      .take(GROUPS_PER_PAGE)
+      .skip(page * GROUPS_PER_PAGE)
+      .getMany();
   }
 
   @Get('/group/id/:id')

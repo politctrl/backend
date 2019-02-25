@@ -1,7 +1,8 @@
-import { JsonController, Get, Param } from 'routing-controllers';
+import { JsonController, Get, Param, QueryParam } from 'routing-controllers';
 import { getConnectionManager, Repository } from 'typeorm';
-import { EntityFromParam } from 'typeorm-routing-controllers-extensions';
 import { Post } from '../entities/Post';
+
+const POSTS_PER_PAGE = 15;
 
 @JsonController()
 export class PostController {
@@ -12,12 +13,14 @@ export class PostController {
   }
 
   @Get('/posts/deleted')
-  getAll() {
+  getAll(@QueryParam('page') page: number = 0) {
     return this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
       .innerJoinAndSelect('account.owner', 'account_owner')
       .where('post.deleted = true')
+      .take(POSTS_PER_PAGE)
+      .skip(page * POSTS_PER_PAGE)
       .orderBy('post.deleteTimestamp', 'DESC')
       .getMany();
   }
@@ -44,12 +47,14 @@ export class PostController {
   }
 
   @Get('/posts/account/:id')
-  getAllFromUser(@Param('id') id: number) {
+  getAllFromUser(@Param('id') id: number, @QueryParam('page') page: number = 0) {
     return this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
       .innerJoinAndSelect('account.owner', 'account_owner')
       .where('post.author.id = :id AND post.deleted = true')
+      .take(POSTS_PER_PAGE)
+      .skip(page * POSTS_PER_PAGE)
       .setParameters({ id })
       .getMany();
   }
