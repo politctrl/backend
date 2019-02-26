@@ -23,14 +23,23 @@ export class AccountController {
   }
 
   @Get('/accounts/service/:service')
-  getAllByService(@Param('service') service: string, @QueryParam('page') page: number = 0) {
-    return this.accountRepository
+  getAllByService(
+    @Param('service') service: string,
+    @QueryParam('page') page: number = 0,
+    forService?: boolean) {
+
+    const query = this.accountRepository
       .createQueryBuilder('account')
       .innerJoinAndSelect('account.owner', 'account_owner')
-      .where('service = :service AND active = true', { service })
-      .take(ACCOUNTS_PER_PAGE)
-      .skip(page * ACCOUNTS_PER_PAGE)
-      .getMany();
+      .where('account.service = :service AND account.active = true', { service });
+    // selecting all if method called by post listener service,
+    // or paginating if called by http request
+    if (!forService) {
+      query
+        .take(ACCOUNTS_PER_PAGE)
+        .skip(page * ACCOUNTS_PER_PAGE);
+    }
+    return query.getMany();
   }
 
   @Get('/account/:id')

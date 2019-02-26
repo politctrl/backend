@@ -34,7 +34,7 @@ export class PolitPostListenerBase implements PolitPostListenerBaseInterface {
   }
 
   async updateFetchedAccounts() {
-    this.fetchedAccounts = await this.context.account.getAllByService(this.serviceName);
+    this.fetchedAccounts = await this.context.account.getAllByService(this.serviceName, 0, true);
   }
 
   async start() {}
