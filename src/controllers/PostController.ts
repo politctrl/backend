@@ -70,13 +70,13 @@ export class PostController {
   }
 
   // no route specified -> unavailable from web
-  updateDeleteInfo(service: string, externalId: string, deleteTimestamp: number) {
-    return this.postRepository
-      .createQueryBuilder('post')
-      .update()
-      .set({ deleteTimestamp })
-      .where('post.service = :service AND post.externalId = :externalId')
-      .setParameters({ service, externalId })
-      .execute();
+  async updateDeleteInfo(service: string, externalId: string, deleteTimestamp: number) {
+    const post = await this.postRepository.findOne({ service, externalId });
+    if (!post) {
+      return;
+    }
+    post.deleted = true;
+    post.deleteTimestamp = deleteTimestamp;
+    this.postRepository.save(post);
   }
 }
