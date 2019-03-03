@@ -1,15 +1,19 @@
 import { JsonController, Get, Param, QueryParam } from 'routing-controllers';
 import { getConnectionManager, Repository } from 'typeorm';
 import { Post } from '../entities/Post';
+import { Embed } from '../entities/Embed';
 
 const POSTS_PER_PAGE = 15;
 
 @JsonController()
 export class PostController {
   private postRepository: Repository<Post>;
+  private embedRepository: Repository<Embed>;
 
   constructor() {
-    this.postRepository = getConnectionManager().get().getRepository(Post);
+    const connection = getConnectionManager().get();
+    this.postRepository = connection.getRepository(Post);
+    this.embedRepository = connection.getRepository(Embed);
   }
 
   @Get('/posts/deleted')
@@ -18,6 +22,7 @@ export class PostController {
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
       .innerJoinAndSelect('account.owner', 'account_owner')
+      .leftJoinAndSelect('post.embeds', 'embeds')
       .where('post.deleted = true')
       .take(POSTS_PER_PAGE)
       .skip(page * POSTS_PER_PAGE)
@@ -31,6 +36,7 @@ export class PostController {
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
       .innerJoinAndSelect('account.owner', 'account_owner')
+      .leftJoinAndSelect('post.embeds', 'embeds')
       .where('post.id = :id', { id })
       .getOne();
   }
@@ -40,7 +46,8 @@ export class PostController {
     return this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
-      .innerJoinAndSelect('account', 'account_owner')
+      .innerJoinAndSelect('account.owner', 'account_owner')
+      .leftJoinAndSelect('post.embeds', 'embeds')
       .where('post.service = :service AND post.externalId = :externalId')
       .setParameters({ service, externalId })
       .getOne();
@@ -52,7 +59,8 @@ export class PostController {
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
       .innerJoinAndSelect('account.owner', 'account_owner')
-      .where('post.author.id = :id AND post.deleted = true')
+      .leftJoinAndSelect('post.embeds', 'embeds')
+      .where('account.id = :id AND post.deleted = true')
       .take(POSTS_PER_PAGE)
       .skip(page * POSTS_PER_PAGE)
       .setParameters({ id })
@@ -60,13 +68,12 @@ export class PostController {
   }
 
   // no route specified -> unavailable from web
-  save(post: Post | Post[]) {
-    return this.postRepository
-      .createQueryBuilder()
-      .insert()
-      .into('post')
-      .values(post)
-      .execute();
+  save(post: Post[]) {
+    const embeds = post.map(e => e.embeds).flat();
+    if (embeds) {
+      this.embedRepository.save(embeds);
+    }
+    this.postRepository.save(post);
   }
 
   // no route specified -> unavailable from web

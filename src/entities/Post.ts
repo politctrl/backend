@@ -1,6 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { Embed } from './Embed';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Account } from './Account';
+import { Embed } from './Embed';
 
 @Entity()
 export class Post {
@@ -29,7 +29,7 @@ export class Post {
   @Column('bigint', { nullable: true })
   deleteTimestamp?: number;
 
-  @Column('json')
+  @OneToMany(type => Embed, embed => embed.origin, { nullable: true })
   embeds: Embed[];
 
   @Column({ nullable: true })

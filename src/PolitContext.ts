@@ -7,6 +7,7 @@ import { Post } from './entities/Post';
 import { Account } from './entities/Account';
 import { AccountOwner } from './entities/AccountOwner';
 import { Group } from './entities/Group';
+import { Embed } from './entities/Embed';
 import { Application } from 'express';
 import http from 'http';
 
@@ -28,6 +29,7 @@ export class PolitContext {
       username: process.env.PGUSER,
       password: process.env.PGPASSWORD,
       entities: [
+        Embed,
         Post,
         Account,
         AccountOwner,

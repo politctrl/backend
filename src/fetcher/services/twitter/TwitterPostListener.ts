@@ -67,6 +67,8 @@ export default class TwitterListener extends PolitPostListenerBase {
                 embed.type = PolitEmbedType.VIDEO;
               }
               embed.url = e.media_url_https;
+              embed.origin = post;
+              post.embeds.push(embed);
             });
           }
 
@@ -95,7 +97,7 @@ export default class TwitterListener extends PolitPostListenerBase {
             }
           }
 
-          this.context.post.save(post);
+          this.context.post.save([post]);
         }
       });
       this.stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
