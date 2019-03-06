@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import { createConnection, Connection } from 'typeorm';
-import { createExpressServer } from 'routing-controllers';
 import PolitServiceManager from './PolitServiceManager';
 import { AccountController, PostController, GroupController } from './controllers';
 import { Post } from './entities/Post';
@@ -8,14 +7,12 @@ import { Account } from './entities/Account';
 import { AccountOwner } from './entities/AccountOwner';
 import { Group } from './entities/Group';
 import { Embed } from './entities/Embed';
-import { Application } from 'express';
-import http from 'http';
+import { WebServer } from './WebServer';
 
 export class PolitContext {
   connection: Connection;
   serviceManager: PolitServiceManager;
-  apiApplication: Application;
-  apiServer: http.Server;
+  api: WebServer;
   account: AccountController;
   post: PostController;
   group: GroupController;
@@ -38,15 +35,7 @@ export class PolitContext {
       synchronize: true,
     });
     this.serviceManager = new PolitServiceManager(this);
-    this.apiApplication = createExpressServer({
-      controllers: [
-        AccountController,
-        PostController,
-        GroupController,
-      ],
-      routePrefix: '/v1',
-    }) as Application;
-    this.apiServer = http.createServer(this.apiApplication);
+    this.api = new WebServer();
     this.account = new AccountController();
     this.post = new PostController();
     this.group = new GroupController();
@@ -54,11 +43,11 @@ export class PolitContext {
 
   async startPolit() {
     await this.serviceManager.startServices();
-    await this.apiServer.listen(parseInt(process.env.HTTP_PORT || '1447', 10));
+    await this.api.start();
   }
 
   async stopPolit() {
-    await this.apiServer.close();
+    await this.api.stop();
     await this.serviceManager.stopServices();
     await this.connection.close();
   }
