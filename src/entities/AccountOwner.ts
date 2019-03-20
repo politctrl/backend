@@ -19,6 +19,9 @@ export class AccountOwner {
   displayName: string;
 
   @Column()
+  photo: string;
+
+  @Column()
   type: 'personal' | 'clerkship' | 'official';
 
   @Column()
