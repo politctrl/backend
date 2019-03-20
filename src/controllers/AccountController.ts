@@ -1,15 +1,27 @@
-import { JsonController, Get, Param, QueryParam } from 'routing-controllers';
+import {
+  JsonController,
+  Get,
+  Param,
+  QueryParam,
+  Post as HttpPost,
+  Authorized,
+  Body,
+} from 'routing-controllers';
 import { getConnectionManager, Repository } from 'typeorm';
 import { Account } from '../entities/Account';
+import { AccountOwner } from '../entities/AccountOwner';
 
 const ACCOUNTS_PER_PAGE = 15;
 
 @JsonController()
 export class AccountController {
   private accountRepository: Repository<Account>;
+  private accountOwnerRepository: Repository<AccountOwner>;
 
   constructor() {
-    this.accountRepository = getConnectionManager().get().getRepository(Account);
+    const connection = getConnectionManager().get();
+    this.accountRepository = connection.getRepository(Account);
+    this.accountOwnerRepository = connection.getRepository(AccountOwner);
   }
 
   @Get('/accounts/all')
@@ -60,5 +72,17 @@ export class AccountController {
       .where('account.service = :service AND account.externalId = :externalId')
       .setParameters({ service, externalId })
       .getOne();
+  }
+
+  @Authorized()
+  @HttpPost('/account/create')
+  async createAccount(@Body() body: Account) {
+    const owner = await this.accountOwnerRepository.findOne({ id: body.owner.id });
+    if (!owner) {
+      throw new Error('No account owner found');
+    }
+    const account = body;
+    account.owner = owner;
+    return this.accountRepository.insert(body);
   }
 }
