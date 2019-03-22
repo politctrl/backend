@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { createConnection, Connection } from 'typeorm';
 import PolitServiceManager from './PolitServiceManager';
-import { AccountController, PostController, GroupController } from './controllers';
+import PolitServiceListener from './PolitServiceListener';
 import { Post } from './entities/Post';
 import { Account } from './entities/Account';
 import { AccountOwner } from './entities/AccountOwner';
@@ -13,9 +13,7 @@ export class PolitContext {
   connection: Connection;
   serviceManager: PolitServiceManager;
   api: WebServer;
-  account: AccountController;
-  post: PostController;
-  group: GroupController;
+  serviceListener: PolitServiceListener;
 
   async initialize() {
     this.connection = await createConnection({
@@ -36,9 +34,6 @@ export class PolitContext {
     });
     this.serviceManager = new PolitServiceManager(this);
     this.api = new WebServer();
-    this.account = new AccountController();
-    this.post = new PostController();
-    this.group = new GroupController();
   }
 
   async startPolit() {

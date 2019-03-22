@@ -1,21 +1,25 @@
 import log from 'consola';
 import Twit, { Stream } from 'twit';
 import { TwitterPost, TwitterDeleteInfo } from './TwitterModels';
-import { PolitEmbedType } from '../../../models';
-import { PolitPostListenerBase, PolitPostListenerState } from '../../PolitPostListenerBase';
-import { PolitContext } from '../../../PolitContext';
-import { Post } from '../../../entities/Post';
+import {
+  PolitPostListenerBase,
+  PolitPostListenerState,
+  PolitPostListenerConstructor,
+} from '../../PolitPostListenerBase';
 import { Account } from '../../../entities/Account';
-import { Embed } from '../../../entities/Embed';
+import { RxEvent } from '../../../utils/rxjsEvent';
+import TwitterRemapper from './TwitterRemapper';
 
 export default class TwitterListener extends PolitPostListenerBase {
   client: Twit;
   fetchedAccounts: Account[];
+  remapper: TwitterRemapper;
   stream?: Stream;
   serviceName: string = 'twitter';
 
-  constructor(context: PolitContext) {
-    super(context);
+  constructor(data: PolitPostListenerConstructor) {
+    super(data);
+    this.remapper = new TwitterRemapper();
     if (!process.env.TWITTER_CONSUMER_KEY
       || !process.env.TWITTER_CONSUMER_SECRET
       || !process.env.TWITTER_ACCESS_TOKEN
@@ -29,7 +33,6 @@ export default class TwitterListener extends PolitPostListenerBase {
       access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
       strictSSL: true,
     });
-    this.fetchedAccounts = [];
   }
 
   async start() {
@@ -46,67 +49,19 @@ export default class TwitterListener extends PolitPostListenerBase {
           A. they're not made by public persons
           B. it's just spammy and not interesing
         */
-        const user = this.fetchedAccounts.find(u => u.externalId === tweet.user.id_str);
-        if (user) {
-          const post = new Post();
-          post.author = user;
-          post.createTimestamp = parseInt(tweet.timestamp_ms, 10);
-          post.deleted = false;
-          post.externalId = tweet.id_str;
-          post.service = this.serviceName;
-          post.replyToId = tweet.in_reply_to_status_id_str;
-
-          post.embeds = [];
-          if (tweet.entities.media) {
-            tweet.entities.media.forEach((e) => {
-              const embed = new Embed();
-              embed.type = PolitEmbedType.IMAGE;
-              if (e.type === 'animated_gif') {
-                embed.type = PolitEmbedType.GIF;
-              } else if (e.type === 'video') {
-                embed.type = PolitEmbedType.VIDEO;
-              }
-              embed.url = e.media_url_https;
-              embed.origin = post;
-              post.embeds.push(embed);
-            });
-          }
-
-          post.content = '';
-          if (tweet.extended_tweet) {
-            post.content = tweet.extended_tweet.full_text;
-          } else if (tweet.retweeted_status) {
-            post.content += `RT @${tweet.retweeted_status.user.screen_name}: `;
-            if (tweet.retweeted_status.extended_tweet) {
-              post.content += tweet.retweeted_status.extended_tweet.full_text;
-            } else {
-              post.content += tweet.retweeted_status.text;
-            }
-          } else {
-            post.content = tweet.text;
-          }
-          if (tweet.quoted_status) {
-            if (tweet.retweeted_status) {
-              post.content += '\n';
-            }
-            post.content += `Quoting @${tweet.quoted_status.user.screen_name}: `;
-            if (tweet.quoted_status.extended_tweet) {
-              post.content += tweet.quoted_status.extended_tweet.full_text;
-            } else {
-              post.content += tweet.quoted_status.text;
-            }
-          }
-
-          this.context.post.save([post]);
+        const posterAccount = this.fetchedAccounts.find(u => u.externalId === tweet.user.id_str);
+        if (posterAccount) {
+          this.listener(
+            new RxEvent(
+              'newPost',
+              this.remapper.rawPostToEntity(tweet, posterAccount)),
+          );
         }
       });
       this.stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
         log.debug(deleteInfo);
-        this.context.post.updateDeleteInfo(
-          this.serviceName,
-          deleteInfo.delete.status.id_str,
-          parseInt(deleteInfo.delete.timestamp_ms, 10),
-        );
+        this.listener(
+          new RxEvent('deletedPost', this.remapper.deleteInfoToPost(deleteInfo)));
       });
       this.state = PolitPostListenerState.RUNNING;
     } else {

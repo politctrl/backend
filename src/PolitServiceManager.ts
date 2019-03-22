@@ -2,21 +2,29 @@ import path from 'path';
 import log from 'consola';
 import { PolitContext } from './PolitContext';
 import { PolitPostListenerBase, PolitPostListenerState } from './fetcher/PolitPostListenerBase';
+import PolitServiceListener from './PolitServiceListener';
+import { Account } from './entities/Account';
 
 export default class PolitServiceManager {
   context: PolitContext;
+  listener: PolitServiceListener;
   services: {
     [key: string]: PolitPostListenerBase;
   } = {};
 
   constructor(context: PolitContext) {
     this.context = context;
+    this.listener = new PolitServiceListener();
   }
 
   async startService(service: string) {
     const { PostListener } = require(path.join(__dirname, 'fetcher', 'services', service, 'index'));
-    this.services[service] = new PostListener(this.context) as PolitPostListenerBase;
-    await this.services[service].updateFetchedAccounts();
+    this.services[service] = new PostListener({
+      listener: this.listener.getListener(),
+      fetchedAccounts: await this.context.connection
+        .getRepository(Account)
+        .find({ service }),
+    }) as PolitPostListenerBase;
     await this.services[service].start();
     if (this.services[service].state === PolitPostListenerState.RUNNING) {
       log.success(`Service ${service} running successfully`);

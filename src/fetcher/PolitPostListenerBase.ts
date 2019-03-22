@@ -1,5 +1,6 @@
 import { PolitContext } from '../PolitContext';
 import { Account } from '../entities/Account';
+import { RxEvent } from '../utils/rxjsEvent';
 
 export enum PolitPostListenerState {
   READY = 'ready',
@@ -11,11 +12,15 @@ export enum PolitPostListenerState {
   BROKEN = 'broken',
 }
 
+export interface PolitPostListenerConstructor {
+  listener: (ev: RxEvent<any>) => void;
+  fetchedAccounts: Account[];
+}
+
 export interface PolitPostListenerBaseInterface {
   state: PolitPostListenerState;
   serviceName: string;
   fetchedAccounts: Account[];
-  updateFetchedAccounts: () => void;
   start: () => void;
   stop: () => void;
 }
@@ -25,16 +30,13 @@ export class PolitPostListenerBase implements PolitPostListenerBaseInterface {
   state: PolitPostListenerState;
   serviceName: string;
   fetchedAccounts: Account[];
+  listener: (ev: RxEvent<any>) => void;
 
-  constructor(context: PolitContext) {
-    this.context = context;
-    this.fetchedAccounts = [];
+  constructor(d: PolitPostListenerConstructor) {
+    this.fetchedAccounts = d.fetchedAccounts;
+    this.listener = d.listener;
     this.state = PolitPostListenerState.READY;
     this.serviceName = 'base';
-  }
-
-  async updateFetchedAccounts() {
-    this.fetchedAccounts = await this.context.account.getAllByService(this.serviceName, 0, true);
   }
 
   async start() {}
