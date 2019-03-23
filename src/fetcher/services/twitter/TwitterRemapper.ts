@@ -3,6 +3,7 @@ import { Post } from '../../../entities/Post';
 import { Account } from '../../../entities/Account';
 import { Embed } from '../../../entities/Embed';
 import { PolitEmbedType } from '../../../models';
+import { stripHTML } from '../../../utils/stripHTML';
 
 class TwitterRemapper {
   serviceName = 'twitter';
@@ -15,6 +16,7 @@ class TwitterRemapper {
     post.externalId = tweet.id_str;
     post.service = this.serviceName;
     post.replyToId = tweet.in_reply_to_status_id_str;
+    post.app = stripHTML(tweet.source);
 
     post.embeds = [];
     if (tweet.entities.media) {

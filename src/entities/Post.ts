@@ -34,4 +34,7 @@ export class Post {
 
   @Column({ nullable: true })
   replyToId?: string;
+
+  @Column({ nullable: true })
+  app?: string;
 }
