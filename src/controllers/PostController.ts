@@ -54,7 +54,7 @@ export class PostController {
   }
 
   @Get('/posts/account/:id')
-  getAllFromUser(@Param('id') id: number, @QueryParam('page') page: number = 0) {
+  getAllFromAccount(@Param('id') id: number, @QueryParam('page') page: number = 0) {
     return this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'account')
@@ -63,27 +63,23 @@ export class PostController {
       .where('account.id = :id AND post.deleted = true')
       .take(POSTS_PER_PAGE)
       .skip(page * POSTS_PER_PAGE)
+      .orderBy('post.deleteTimestamp', 'DESC')
       .setParameters({ id })
       .getMany();
   }
 
-  // no route specified -> unavailable from web
-  save(post: Post[]) {
-    const embeds = post.map(e => e.embeds).flat();
-    if (embeds) {
-      this.embedRepository.save(embeds);
-    }
-    this.postRepository.save(post);
-  }
-
-  // no route specified -> unavailable from web
-  async updateDeleteInfo(service: string, externalId: string, deleteTimestamp: number) {
-    const post = await this.postRepository.findOne({ service, externalId });
-    if (!post) {
-      return;
-    }
-    post.deleted = true;
-    post.deleteTimestamp = deleteTimestamp;
-    this.postRepository.save(post);
+  @Get('/posts/account_owner/:id')
+  getAllFromAccountOwner(@Param('id') id: number, @QueryParam('page') page: number = 0) {
+    return this.postRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.author', 'account')
+      .innerJoinAndSelect('account.owner', 'account_owner')
+      .leftJoinAndSelect('post.embeds', 'embeds')
+      .where('account_owner.id = :id AND post.deleted = true')
+      .take(POSTS_PER_PAGE)
+      .skip(page * POSTS_PER_PAGE)
+      .orderBy('post.deleteTimestamp', 'DESC')
+      .setParameters({ id })
+      .getMany();
   }
 }
