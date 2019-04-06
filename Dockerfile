@@ -15,4 +15,6 @@ COPY tsconfig.json .
 
 RUN yarn build
 
+EXPOSE 1447
+
 CMD [ "node", "dist/index.js" ]
