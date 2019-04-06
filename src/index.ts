@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import dotenvExpand from 'dotenv-expand';
+dotenvExpand(dotenv.config());
 
 import log from 'consola';
 
