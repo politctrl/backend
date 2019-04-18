@@ -10,11 +10,13 @@ import { Account } from '../../../entities/Account';
 import { RxEvent } from '../../../utils/rxjsEvent';
 import TwitterRemapper from './TwitterRemapper';
 
+const MAX_ACCOUNTS_PER_STREAM = 5000;
+
 export default class TwitterListener extends PolitPostListenerBase {
   client: Twit;
   fetchedAccounts: Account[];
   remapper: TwitterRemapper;
-  stream?: Stream;
+  streams?: Stream[];
   serviceName: string = 'twitter';
 
   constructor(data: PolitPostListenerConstructor) {
@@ -39,29 +41,39 @@ export default class TwitterListener extends PolitPostListenerBase {
     log.debug(this.fetchedAccounts);
     if (this.fetchedAccounts.length) {
       this.state = PolitPostListenerState.STARTING;
-      this.stream = this.client.stream(
-        'statuses/filter', { follow: this.fetchedAccounts.map(a => a.externalId).join(',') });
-      this.stream.on('tweet', (tweet: TwitterPost) => {
-        log.debug(JSON.stringify(tweet));
-        /*
-          some of tweets showed here are just mentioning the followed person
-          and we shouldn't archive them because:
-          A. they're not made by public persons
-          B. it's just spammy and not interesing
-        */
-        const posterAccount = this.fetchedAccounts.find(u => u.externalId === tweet.user.id_str);
-        if (posterAccount) {
-          this.listener(
-            new RxEvent(
-              'newPost',
-              this.remapper.rawPostToEntity(tweet, posterAccount)),
-          );
+      const accs: Account[][] = this.fetchedAccounts.reduce((pre, cur, i) => {
+        const ci = Math.floor(i / MAX_ACCOUNTS_PER_STREAM);
+        if (!pre[ci]) {
+          pre[ci] = [];
         }
-      });
-      this.stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
-        log.debug(deleteInfo);
-        this.listener(
-          new RxEvent('deletedPost', this.remapper.deleteInfoToPost(deleteInfo)));
+        pre[ci].push(cur);
+        return pre;
+      },                                                    [] as Account[][]);
+      this.streams = accs.map(streamAccs => this.client.stream(
+        'statuses/filter', { follow: streamAccs.map(a => a.externalId).join(',') }));
+      this.streams.forEach((stream) => {
+        stream.on('tweet', (tweet: TwitterPost) => {
+          log.debug(JSON.stringify(tweet));
+          /*
+            some of tweets showed here are just mentioning the followed person
+            and we shouldn't archive them because:
+            A. they're not made by public persons
+            B. it's just spammy and not interesing
+          */
+          const posterAccount = this.fetchedAccounts.find(u => u.externalId === tweet.user.id_str);
+          if (posterAccount) {
+            this.listener(
+              new RxEvent(
+                'newPost',
+                this.remapper.rawPostToEntity(tweet, posterAccount)),
+            );
+          }
+        });
+        stream.on('delete', (deleteInfo: TwitterDeleteInfo) => {
+          log.debug(deleteInfo);
+          this.listener(
+            new RxEvent('deletedPost', this.remapper.deleteInfoToPost(deleteInfo)));
+        });
       });
       this.state = PolitPostListenerState.RUNNING;
     } else {
@@ -70,8 +82,8 @@ export default class TwitterListener extends PolitPostListenerBase {
   }
 
   async stop() {
-    if (this.stream) {
-      this.stream.stop();
+    if (this.streams) {
+      this.streams.forEach(stream => stream.stop());
     }
     this.state = PolitPostListenerState.STOPPED;
   }
