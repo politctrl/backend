@@ -17,6 +17,7 @@ class TwitterRemapper {
     post.service = this.serviceName;
     post.replyToId = tweet.in_reply_to_status_id_str;
     post.app = stripHTML(tweet.source);
+    post.originalUrl = `https://twitter.com/${tweet.user.screen_name}/status/${tweet.id_str}`;
 
     post.embeds = [];
     if (tweet.entities.media) {

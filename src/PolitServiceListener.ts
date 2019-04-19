@@ -3,6 +3,7 @@ import { RxEvent } from './utils/rxjsEvent';
 import { Post } from './entities/Post';
 import { Embed } from './entities/Embed';
 import { getConnectionManager, Connection, Repository } from 'typeorm';
+import fetch from 'node-fetch';
 
 type EventData = any;
 
@@ -47,6 +48,18 @@ class PolitListenerApi {
         e.origin = savedPost;
         return e;
       }).forEach(e => this.saveEmbed(e));
+    }
+    if (post.originalUrl && !post.archiveUrl) {
+      // archiving with web.archive.org
+      fetch(`https://web.archive.org/save/${post.originalUrl}`)
+        .then((res) => {
+          const arch = res.headers.get('Content-Location');
+          if (arch) {
+            savedPost.archiveUrl = `https://web.archive.org${arch}`;
+            this.postRepo.save(savedPost);
+          }
+        })
+        .catch(() => {});
     }
   }
 

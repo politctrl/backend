@@ -37,4 +37,10 @@ export class Post {
 
   @Column({ nullable: true })
   app?: string;
+
+  @Column({ nullable: true })
+  originalUrl?: string;
+
+  @Column({ nullable: true })
+  archiveUrl?: string; // meant for linking to known web archives for verifiability
 }
